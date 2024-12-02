@@ -9,7 +9,7 @@ import requests
 
 
 OUTPUT_PATH = Path(__file__).parent
-ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame0")
+ASSETS_PATH = OUTPUT_PATH / Path(r"assets")
 
 MST_GL = ''
 NAME_GL = ''
@@ -138,7 +138,7 @@ def on_tree_select(event):
 
 
 def relative_to_assets(path: str) -> Path:
-    return ASSETS_PATH / Path(path)
+    return "assets/" + path
 
 
 window = Tk()
@@ -148,6 +148,7 @@ window.title(" ♥ Note MST ♥ ")
 window.configure(bg = "#FAB8EA")
 window.resizable(True, True)
 
+window.iconbitmap('assets/icon.ico')
 mst = StringVar()
 name_cty = StringVar()
 msg = StringVar()
