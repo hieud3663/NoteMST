@@ -145,7 +145,7 @@ window = Tk()
 
 window.geometry("1222x700")
 window.title(" ♥ Note MST ♥ ")
-window.configure(bg = "#FAB8EA")
+window.configure(bg = "#E6FDD9")
 window.resizable(True, True)
 
 window.iconbitmap('assets/icon.ico')
@@ -164,7 +164,7 @@ set_font = font.Font(family="Arial", size=12)
 
 canvas = Canvas(
     window,
-    bg = "#FAB8EA",
+    bg = "#E6FDD9",
     height = 791,
     width = 1222,
     bd = 0,
@@ -397,7 +397,7 @@ name_cty_entry.place(
 )
 
 canvas.create_text(
-    401.0,
+    451.0,
     14.0,
     anchor="nw",
     text="NOTE MST",
