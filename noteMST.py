@@ -1,12 +1,21 @@
+from pathlib import Path
+
 from tkinter import *
-import tkinter as tk
-from tkinter import ttk, font
-from data import *
+# import tkinter as tk
+from data2 import *
+# Explicit imports to satisfy Flake8
+from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, font, ttk, messagebox
+import requests
+
+
+OUTPUT_PATH = Path(__file__).parent
+ASSETS_PATH = OUTPUT_PATH / Path(r"assets\frame0")
 
 MST_GL = ''
 NAME_GL = ''
 NOTE = ''
 TEXT_COLOR = 'green'
+
 
 def getInfo():
     data = getData()
@@ -18,7 +27,17 @@ def getInfo():
 
     return data
 
+def getMSTInfo(mst):
+    re = requests.get(f'https://api.vietqr.io/v2/business/{mst}').json()
+    if re['code'] == '00':
+        data = re['data']
+        id = data['id']
+        name = data['name']
 
+        return id, name
+    else:
+        return None, None
+    
 def getMSTInfo2(mst):
     global MST_GL, NAME_GL, TEXT_COLOR, NOTE
     if mst:
@@ -31,6 +50,16 @@ def getMSTInfo2(mst):
             TEXT_COLOR = 'red'
 
         name_cty_entry.config(fg=TEXT_COLOR)
+
+
+def reset_entry():
+    mst_input.set('')
+    entry_2.config(textvariable=mst_input)
+
+    name_cty.set('')
+    name_cty_entry.config(textvariable=name_cty)
+
+    text_note.delete("1.0", "end")  # Xóa nội dung ghi chú cũ
 
 
 def search(data, mst):
@@ -51,9 +80,7 @@ def add(data):
     list_mst = [str(i[1]) for i in dataInfo]
 
     if MST_GL in list_mst:
-        msg.set('✘ MST Công ty đã tồn tại!!!')
-        msg_label.config(textvariable=msg, fg='red')
-
+        messagebox.showerror("Lỗi", "✘ MST Công ty đã tồn tại!!!")
     elif MST_GL and NAME_GL:
         NOTE = text_note.get("1.0", "end-1c").strip()
 
@@ -61,16 +88,13 @@ def add(data):
 
         res = postData(info)
         if res:
-            msg.set('✔ Thêm dữ liệu thành công')
-            msg_label.config(textvariable=msg, fg='green')
+            messagebox.showinfo("Thành công", "✔ Thêm dữ liệu thành công")
             dataInfo = getInfo()
+            reset_entry()
         else:
-            msg.set('✘ Đã xảy ra lỗi!!!')
-            msg_label.config(textvariable=msg, fg='red')
-
+            messagebox.showerror("Lỗi", "✘ Đã xảy ra lỗi!!!")
     else:
-        msg.set('✘ Tên công ty không được để trống!!!')
-        msg_label.config(textvariable=msg, fg='red')
+        messagebox.showwarning("Cảnh báo", "✘ Tên công ty không được để trống!!!")
 
     return 0
 
@@ -81,24 +105,18 @@ def edit(data):
     name = name_cty.get()
     note = text_note.get("1.0", "end-1c").strip()
 
-
     if mst and name:
-
         info = (mst, name, note)
-
         res = editData(info)
         if res:
-            msg.set('✔ Cập nhật liệu thành công')
-            msg_label.config(textvariable=msg, fg='green')
+            messagebox.showinfo("Thành công", "✔ Cập nhật dữ liệu thành công")
             dataInfo = getInfo()
         else:
-            msg.set('✘ Đã xảy ra lỗi!!!')
-            msg_label.config(textvariable=msg, fg='red')
-
+            messagebox.showerror("Lỗi", "✘ Đã xảy ra lỗi!!!")
     else:
-        msg.set('✘ MST và Tên công ty không được để trống!!!')
-        msg_label.config(textvariable=msg, fg='red')
+        messagebox.showwarning("Cảnh báo", "✘ MST và Tên công ty không được để trống!!!")
 
+    reset_entry()
     return 0
 
 
@@ -119,91 +137,273 @@ def on_tree_select(event):
         text_note.insert("1.0", values[3])  # Ghi chú mới
 
 
+def relative_to_assets(path: str) -> Path:
+    return ASSETS_PATH / Path(path)
 
 
+window = Tk()
 
-# Tạo cửa sổ chính
-app = tk.Tk()
-app.title(" ♥ Note MST ♥ ")
-app.minsize(height=600, width=1000)
-app.config(bg = 'lightpink')
-
-tk.Label(app, text=" 🌲💚✲☆ Note MST ☆✲💚🌲", font=('Arial', 20, 'bold'), fg='green', bg='lightpink').grid(row=0, column=1, pady=10)
-
+window.geometry("1222x700")
+window.title(" ♥ Note MST ♥ ")
+window.configure(bg = "#FAB8EA")
+window.resizable(True, True)
 
 mst = StringVar()
 name_cty = StringVar()
 msg = StringVar()
+mst_input = StringVar()
 
+#khai báo bảng dữ liệu
+# :
 
-# Bảng hiển thị dữ liệu
-columns = ("ID", "MST", "Tên công ty", "Ghi chú", "Thời gian")
-tree = ttk.Treeview(app, columns=columns, show="headings")
+#laays duwx lieuej
 
 # Định nghĩa font chữ
 set_font = font.Font(family="Arial", size=12)
 
+canvas = Canvas(
+    window,
+    bg = "#FAB8EA",
+    height = 791,
+    width = 1222,
+    bd = 0,
+    highlightthickness = 0,
+    relief = "ridge"
+)
 
+canvas.place(x = 0, y = 0)
+entry_image_1 = PhotoImage(
+    file=relative_to_assets("entry_1.png"))
+entry_bg_1 = canvas.create_image(
+    553.4466094970703,
+    131.79474258422852,
+    image=entry_image_1
+)
+entry_1 = Entry(
+    bd=0,
+    bg="#FFFFFF",
+    fg="#000716",
+    highlightthickness=0,
+    font=set_font,
+    textvariable=mst
+)
+entry_1.place(
+    x=401.0,
+    y=111.0,
+    width=304.8932189941406,
+    height=39.58948516845703
+)
+
+canvas.create_text(
+    55.0,
+    270.54541015625,
+    anchor="nw",
+    text="Ghi chú\n",
+    fill="#000000",
+    font=("Poppins Bold", 18 * -1)
+)
+
+canvas.create_text(
+    582.0272827148438,
+    201.570068359375,
+    anchor="nw",
+    text="Tên công ty",
+    fill="#000000",
+    font=("Poppins Bold", 20 * -1)
+)
+
+button_image_1 = PhotoImage(
+    file=relative_to_assets("lay_thongtin.png"))
+lay_thongtin = Button(
+    image=button_image_1,
+    borderwidth=0,
+    highlightthickness=0,
+    command=lambda: getMSTInfo2(mst_input.get()),
+    relief="flat"
+)
+lay_thongtin.place(
+    x=396.85552978515625,
+    y=195.79736328125,
+    width=152.1785430908203,
+    height=37.11013412475586
+)
+
+button_image_2 = PhotoImage(
+    file=relative_to_assets("tim_kiem.png"))
+tim_kiem = Button(
+    image=button_image_2,
+    borderwidth=0,
+    highlightthickness=0,
+    command=lambda: search(dataInfo, mst.get()),
+    relief="flat"
+)
+tim_kiem.place(
+    x=743.0,
+    y=111.0,
+    width=89.0,
+    height=39.11013412475586
+)
+
+button_image_3 = PhotoImage(
+    file=relative_to_assets("sua.png"))
+sua = Button(
+    image=button_image_3,
+    borderwidth=0,
+    highlightthickness=0,
+    command=lambda: edit(dataInfo),
+    relief="flat"
+)
+sua.place(
+    x=815.796142578125,
+    y=307.9524230957031,
+    width=154.203857421875,
+    height=37.11013412475586
+)
+
+button_image_4 = PhotoImage(
+    file=relative_to_assets("them.png"))
+them = Button(
+    image=button_image_4,
+    borderwidth=0,
+    highlightthickness=0,
+    command=lambda: add(dataInfo),
+    relief="flat"
+)
+them.place(
+    x=620.0,
+    y=307.9524230957031,
+    width=163.11875915527344,
+    height=37.11013412475586
+)
+
+
+#Thông báo
+# msg_label = Label(window, textvariable=msg, font=set_font, bg='lightpink') #thông báo
+# msg_label.place(
+#     x = 300,
+#     y = 350
+# )
+
+# Bảng hiển thị dữ liệu
+tree = ttk.Treeview(window)
+columns = ("ID", "MST", "Tên công ty", "Ghi chú", "Thời gian")
+tree.config(columns=columns, show="headings")
 style = ttk.Style()
-style.configure("Treeview", font=("Arial", 10), rowheight=25)  # Font hàng dữ liệu
-style.configure("Treeview.Heading", font=("Arial", 10, "bold"))  # Font tiêu đề cột
+style.configure("Treeview", font=("Arial", 12), rowheight=25)  # Font hàng dữ liệu
+style.configure("Treeview.Heading", font=("Arial", 12, "bold"))  # Font tiêu đề cột
 
-
-# Nhập Pincode
-tk.Label(app, text="Tìm MST", font=set_font, bg='lightpink').grid(row=1, column=0, pady=5, sticky='e')
-
-pincode_entry = tk.Entry(app, width=30, font=("Arial", 14), textvariable=mst)
-pincode_entry.grid(row=1, column=1, padx=1, pady=5)
-
-# Nút Tìm kiếm
-dataInfo = getInfo()
-search_button = tk.Button(app, text="Search", font=set_font, command=lambda: search(dataInfo, mst.get()))
-search_button.grid(row=1, column=2, padx=1, pady=5)
-
-
-#thêm mst:
-tk.Label(app, font=set_font, bg='lightpink').grid(row=2, column=0, padx=20, pady=20)
-tk.Label(app, text="Thêm MST", font=set_font, bg='lightpink').grid(row=3, column=0, padx=10, pady=5, sticky='e')
-mst_input = StringVar()
-
-mst_input_entry = tk.Entry(app, width=20, font=("Arial", 13), textvariable=mst_input)
-mst_input_entry.grid(row=3, column=1, padx=5, pady=5, sticky='w')
-
-get_mst_btn = tk.Button(app, text="Lấy thông tin", font=set_font, command=lambda: getMSTInfo2(mst_input.get()))
-get_mst_btn.grid(row=3, column=2, padx=5, pady=5, sticky='w')
-
-# name cty
-tk.Label(app, text="Tên công ty: ", font=("Arial", 13), bg='lightpink').grid(row=4, column=0, padx=5, pady=5, sticky='e')
-name_cty.set(NAME_GL)
-name_cty_entry = tk.Entry(app, textvariable=name_cty, font=("Arial", 13), width=50, fg=TEXT_COLOR)
-name_cty_entry.grid(row=4, column=1, padx=5, pady=5 , sticky='w')
-
-#note
-tk.Label(app, text="Ghi chú: ", font=("Arial", 13), bg='lightpink').grid(row=5, column=0, padx=5, pady=5,  sticky='e')
-text_note = tk.Text(app, wrap="word", font=("Arial", 12), height=5, width=20)
-text_note.grid(row=5, column=1, padx=5, pady=5, sticky='w')
-
-#thêm dữ liệu
-msg_label = Label(app, textvariable=msg, font=set_font, bg='lightpink') #thông báo
-
-add_btn = tk.Button(app, text="Thêm dữ liệu", font=set_font, command=lambda: add(dataInfo)) #nut thêm
-add_btn.grid(row=6, column=1, padx=5, pady=5, sticky='e')
-
-#sửa dữ liệu
-edit_btn = tk.Button(app, text="Sửa dữ liệu", font=set_font, command=lambda: edit(dataInfo))
-edit_btn.grid(row=6, column=2, padx=5, pady=5, sticky='w')
-msg_label.grid(row=7, column=1, padx=5, pady=5)
 
 #bảng dữ liệu
 column_widths = {"ID": 50, "MST": 180, "Tên công ty": 400, "Ghi chú": 180, "Thời gian": 200}
 for col in columns:
     tree.heading(col, text=col)
-    tree.column(col, width=column_widths[col])
+    tree.column(col, width=column_widths[col],  anchor='center')
+
+tree.place(
+    x=25,
+    y=370,
+    relwidth= 0.95,
+    relheight=0.45
+)
 
 
-tree.grid(row=8, column=0, columnspan=len(columns), padx=10, pady=10)
+#####################3
+dataInfo = getInfo()
+##############################
+
+canvas.create_text(
+    43.0,
+    204.0,
+    anchor="nw",
+    text="Thêm MST",
+    fill="#000000",
+    font=("Poppins Bold", 18 * -1)
+)
+
+canvas.create_text(
+    285.0,
+    118.56594848632812,
+    anchor="nw",
+    text="Tìm MST",
+    fill="#000000",
+    font=("Poppins Bold", 18 * -1)
+)
+
+entry_image_2 = PhotoImage(
+    file=relative_to_assets("entry_2.png"))
+entry_bg_2 = canvas.create_image(
+    263.0,
+    215.0,
+    image=entry_image_2
+)
+entry_2 = Entry(
+    bd=0,
+    bg="#FFFFFF",
+    fg="#000716",
+    highlightthickness=0,
+    font=set_font,
+    textvariable=mst_input
+)
+entry_2.place(
+    x=159.0,
+    y=195.0,
+    width=208.0,
+    height=38.0
+)
+
+entry_image_3 = PhotoImage(
+    file=relative_to_assets("note.png"))
+entry_bg_3 = canvas.create_image(
+    262.5,
+    296.0,
+    image=entry_image_3
+)
+text_note = Text(
+    bd=0,
+    bg="#FFFFFF",
+    fg="#000716",
+    highlightthickness=0,
+    font=set_font
+)
+text_note.place(
+    x=159.0,
+    y=258.0,
+    width=207.0,
+    height=74.0
+)
+
+entry_image_4 = PhotoImage(
+    file=relative_to_assets("name_cty.png"))
+entry_bg_4 = canvas.create_image(
+    948.0,
+    215.0,
+    image=entry_image_4
+)
+name_cty.set(NAME_GL)
+name_cty_entry = Entry(
+    bd=0,
+    bg="#FFFFFF",
+    fg="#000716",
+    highlightthickness=0,
+    font=set_font,
+    textvariable = name_cty
+)
+name_cty_entry.place(
+    x=727.0,
+    y=195.0,
+    width=442.0,
+    height=38.0
+)
+
+canvas.create_text(
+    401.0,
+    14.0,
+    anchor="nw",
+    text="NOTE MST",
+    fill="#000000",
+    font=("Poppins Bold", 40 * -1)
+)
+
 tree.bind("<<TreeviewSelect>>", on_tree_select)
-
-
-pincode_entry.bind("<KeyRelease>", lambda event: search(dataInfo, mst.get()))
-app.mainloop()
+entry_1.bind("<KeyRelease>", lambda event: search(dataInfo, mst.get()))
+window.mainloop()
